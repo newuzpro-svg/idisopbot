@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 import asyncio
+from typing import Optional
 import yt_dlp
 
 
@@ -21,7 +22,7 @@ def is_tiktok_url(url: str) -> bool:
     return bool(re.search(pattern, url))
 
 
-def extract_url_from_text(text: str) -> str | None:
+def extract_url_from_text(text: str) -> Optional[str]:
     url_pattern = r'https?://[^\s]+'
     urls = re.findall(url_pattern, text)
     for url in urls:

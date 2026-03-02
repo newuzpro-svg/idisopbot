@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: idisopbot
     runtime: python
     buildCommand: pip install -r requirements.txt
@@ -9,4 +9,6 @@ services:
         sync: false
       - key: BOT_USERNAME
         value: idisopbot
+      - key: PORT
+        value: 8080
     plan: free

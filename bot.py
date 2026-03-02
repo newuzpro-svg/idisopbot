@@ -1,6 +1,8 @@
 import os
 import logging
 import asyncio
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -211,9 +213,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cleanup_file(file_path)
 
 
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def log_message(self, format, *args):
+        pass
+
+
+def run_health_server():
+    port = int(os.getenv("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    logger.info(f"Health check server port {port} da ishlamoqda")
+    server.serve_forever()
+
+
 def main():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN .env faylida topilmadi!")
+
+    health_thread = threading.Thread(target=run_health_server, daemon=True)
+    health_thread.start()
 
     app = Application.builder().token(BOT_TOKEN).build()
 

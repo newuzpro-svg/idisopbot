@@ -37,15 +37,10 @@ async def download_video(url: str) -> dict:
 
     ydl_opts = {
         'outtmpl': output_template,
-        'format': 'best[ext=mp4]/best',
+        'format': 'best[ext=mp4]/best[filesize<50M]/best',
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
-        'merge_output_format': 'mp4',
-        'postprocessors': [{
-            'key': 'FFmpegVideoConvertor',
-            'preferedformat': 'mp4',
-        }],
         'http_headers': {
             'User-Agent': (
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '

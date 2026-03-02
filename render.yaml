@@ -2,7 +2,6 @@ services:
   - type: web
     name: idisopbot
     runtime: python
-    pythonVersion: "3.11.0"
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     envVars:
@@ -10,6 +9,5 @@ services:
         sync: false
       - key: BOT_USERNAME
         value: idisopbot
-      - key: PORT
-        value: 10000
-    plan: free
+      - key: PYTHON_VERSION
+        value: 3.11.0

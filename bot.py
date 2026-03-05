@@ -21,6 +21,7 @@ from downloader import (
     extract_url_from_text,
     is_instagram_url,
     is_tiktok_url,
+    is_youtube_url,
     cleanup_file,
 )
 
@@ -44,26 +45,26 @@ CAPTION_TEMPLATE = (
 
 WELCOME_TEXT = (
     "👋 <b>Salom! Men video yuklovchi botman.</b>\n\n"
-    "📲 Instagram yoki TikTok havolasini yuboring — videoni yuklab beraman.\n\n"
+    "📲 Havola yuboring — videoni yuklab beraman.\n\n"
     "✅ <b>Qo'llab-quvvatlanadi:</b>\n"
     "• Instagram Reels, Posts, Stories\n"
-    "• TikTok Videos\n\n"
+    "• TikTok Videos\n"
+    "• YouTube Videos & Shorts\n\n"
     "🔗 Havola yuboring!"
 )
 
 HELP_TEXT = (
     "📖 <b>Yordam</b>\n\n"
     "<b>Qanday ishlatish:</b>\n"
-    "• Instagram yoki TikTok havolasini botga yuboring\n"
-    "• Bot videoni avtomatik yuklab jo'natadi\n\n"
+    "• Havola yuboring — bot avtomatik yuklab jo'natadi\n\n"
     "<b>Misollar:</b>\n"
     "• <code>https://www.instagram.com/reel/xxxxx/</code>\n"
-    "• <code>https://www.tiktok.com/@user/video/xxxxx</code>\n"
-    "• <code>https://vm.tiktok.com/xxxxx/</code>\n\n"
+    "• <code>https://vm.tiktok.com/xxxxx/</code>\n"
+    "• <code>https://youtube.com/shorts/xxxxx</code>\n"
+    "• <code>https://youtu.be/xxxxx</code>\n\n"
     "<b>Muammo bo'lsa:</b>\n"
     "• Havola to'g'ri ekanligini tekshiring\n"
-    "• Video ochiq (public) bo'lishi kerak\n"
-    "• Video 50MB dan kam bo'lishi kerak\n\n"
+    "• Video ochiq (public) bo'lishi kerak\n\n"
     "🤖 Bot: @{bot_username}"
 )
 
@@ -102,9 +103,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif query.data == "example":
         await query.message.reply_text(
-            "🔗 Instagram yoki TikTok havolasini yuboring:\n\n"
+            "🔗 Havola yuboring:\n\n"
             "<code>https://www.instagram.com/reel/xxxxx/</code>\n"
-            "<code>https://vm.tiktok.com/xxxxx/</code>",
+            "<code>https://vm.tiktok.com/xxxxx/</code>\n"
+            "<code>https://youtu.be/xxxxx</code>",
             parse_mode=ParseMode.HTML,
         )
 
@@ -117,10 +119,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not url:
         await message.reply_text(
-            "❌ Instagram yoki TikTok havolasi topilmadi.\n\n"
-            "Havola yuboring, masalan:\n"
-            "<code>https://www.instagram.com/reel/xxxxx/</code>\n"
-            "<code>https://vm.tiktok.com/xxxxx/</code>",
+            "❌ Havola topilmadi.\n\n"
+            "Instagram, TikTok yoki YouTube havolasini yuboring.",
             parse_mode=ParseMode.HTML,
         )
         return
@@ -129,6 +129,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_instagram_url(url):
         platform = "Instagram"
         platform_emoji = "📸"
+    elif is_youtube_url(url):
+        platform = "YouTube"
+        platform_emoji = "▶️"
     else:
         platform = "TikTok"
         platform_emoji = "🎵"
@@ -182,13 +185,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except ValueError as e:
         error_text = str(e)
-        if "50MB" in error_text:
-            msg = "❌ Video hajmi juda katta (50MB dan oshiq). Kichikroq video yuboring."
-        elif "Yuklab bo'lmadi" in error_text:
+        if "Yuklab bo'lmadi" in error_text:
             msg = (
                 "❌ Videoni yuklab bo'lmadi.\n\n"
-                "Sabab: Video yopiq (private) bo'lishi mumkin yoki\n"
-                "havola noto'g'ri. Iltimos tekshiring."
+                "Video yopiq (private) yoki havola noto'g'ri bo'lishi mumkin."
             )
         else:
             msg = f"❌ Xatolik: {error_text}"

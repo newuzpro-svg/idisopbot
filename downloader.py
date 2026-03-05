@@ -22,11 +22,16 @@ def is_tiktok_url(url: str) -> bool:
     return bool(re.search(pattern, url))
 
 
+def is_youtube_url(url: str) -> bool:
+    pattern = r'(https?://)?(www\.)?(youtube\.com/(watch|shorts)|youtu\.be)/[\w\-\?=&]+'
+    return bool(re.search(pattern, url))
+
+
 def extract_url_from_text(text: str) -> Optional[str]:
     url_pattern = r'https?://[^\s]+'
     urls = re.findall(url_pattern, text)
     for url in urls:
-        if is_instagram_url(url) or is_tiktok_url(url):
+        if is_instagram_url(url) or is_tiktok_url(url) or is_youtube_url(url):
             return url
     return None
 
@@ -38,7 +43,7 @@ async def download_video(url: str) -> dict:
 
     ydl_opts = {
         'outtmpl': output_template,
-        'format': 'best[ext=mp4]/best[filesize<50M]/best',
+        'format': 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
@@ -49,7 +54,7 @@ async def download_video(url: str) -> dict:
                 'Chrome/120.0.0.0 Safari/537.36'
             )
         },
-        'socket_timeout': 30,
+        'socket_timeout': 60,
         'retries': 3,
     }
 
@@ -76,11 +81,6 @@ async def download_video(url: str) -> dict:
         raise FileNotFoundError("Fayl topilmadi")
 
     file_size = os.path.getsize(downloaded_file)
-    # Telegram limit: 50MB
-    if file_size > 50 * 1024 * 1024:
-        os.remove(downloaded_file)
-        raise ValueError("Video hajmi juda katta (50MB dan oshiq)")
-
     title = info.get('title', '') if info else ''
     uploader = info.get('uploader', '') if info else ''
 

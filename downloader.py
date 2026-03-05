@@ -68,7 +68,7 @@ async def download_video(url: str) -> dict:
     try:
         info = await loop.run_in_executor(None, _download)
     except yt_dlp.utils.DownloadError as e:
-        raise ValueError(f"Yuklab bo'lmadi: {str(e)}")
+        raise ValueError(str(e))
 
     # Find the downloaded file
     downloaded_file = None

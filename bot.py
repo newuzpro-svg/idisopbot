@@ -181,14 +181,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.delete()
 
     except ValueError as e:
-        error_text = str(e)
-        if "Yuklab bo'lmadi" in error_text:
+        error_text = str(e).lower()
+        if "private" in error_text or "login required" in error_text or "age" in error_text:
+            msg = (
+                "❌ Video yopiq (private) yoki kirish uchun login talab qilinadi."
+            )
+        elif "not available" in error_text or "does not exist" in error_text or "404" in error_text:
+            msg = (
+                "❌ Video topilmadi yoki o'chirilgan.\n\n"
+                "Havola to'g'ri ekanligini tekshiring."
+            )
+        elif "instagram" in error_text or "rate" in error_text or "429" in error_text:
+            msg = (
+                "❌ Instagram hozir yuklab olishni blokladi.\n\n"
+                "Bir oz kutib qayta urinib ko'ring."
+            )
+        elif "timeout" in error_text or "timed out" in error_text:
+            msg = "❌ Vaqt tugadi. Iltimos qayta urinib ko'ring."
+        else:
             msg = (
                 "❌ Videoni yuklab bo'lmadi.\n\n"
-                "Video yopiq (private) yoki havola noto'g'ri bo'lishi mumkin."
+                "Havola to'g'ri va video ochiq (public) ekanligini tekshiring."
             )
-        else:
-            msg = f"❌ Xatolik: {error_text}"
         await status_msg.edit_text(msg, parse_mode=ParseMode.HTML)
 
     except FileNotFoundError:

@@ -5,9 +5,9 @@ import time
 import urllib.request
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
-from hydrogram import Client, filters
-from hydrogram.enums import ParseMode, ChatAction
-from hydrogram.types import (
+from pyrogram import Client, filters
+from pyrogram.enums import ParseMode, ChatAction
+from pyrogram.types import (
     Message,
     InlineKeyboardMarkup,
     InlineKeyboardButton,

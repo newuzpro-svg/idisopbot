@@ -1,18 +1,21 @@
 import os
 import logging
+import asyncio
 import threading
 import time
 import urllib.request
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
-from pyrogram import Client, filters
-from pyrogram.enums import ParseMode, ChatAction
-from pyrogram.types import (
-    Message,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    CallbackQuery,
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+    filters,
 )
+from telegram.constants import ParseMode, ChatAction
 from downloader import (
     download_video,
     extract_url_from_text,
@@ -30,8 +33,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-API_ID = int(os.getenv("API_ID", "0"))
-API_HASH = os.getenv("API_HASH", "")
 BOT_USERNAME = os.getenv("BOT_USERNAME", "SaveVideoBot")
 
 CAPTION_TEMPLATE = (
@@ -65,39 +66,34 @@ HELP_TEXT = (
     "🤖 Bot: @{bot_username}"
 )
 
-bot = Client(
-    "idisopbot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-    in_memory=True,
-)
 
-
-@bot.on_message(filters.command("start"))
-async def start_command(client: Client, message: Message):
-    keyboard = InlineKeyboardMarkup([
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
         [InlineKeyboardButton("📖 Yordam", callback_data="help"),
          InlineKeyboardButton("📥 Yuklab ko'ring", callback_data="example")]
-    ])
-    await message.reply_text(
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
         WELCOME_TEXT,
         parse_mode=ParseMode.HTML,
-        reply_markup=keyboard,
+        reply_markup=reply_markup,
     )
 
 
-@bot.on_message(filters.command("help"))
-async def help_command(client: Client, message: Message):
-    await message.reply_text(
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
         HELP_TEXT.format(bot_username=BOT_USERNAME),
         parse_mode=ParseMode.HTML,
     )
 
 
-@bot.on_callback_query()
-async def button_callback(client: Client, query: CallbackQuery):
-    await query.answer()
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    try:
+        await query.answer()
+    except Exception:
+        return
+
     if query.data == "help":
         await query.message.reply_text(
             HELP_TEXT.format(bot_username=BOT_USERNAME),
@@ -113,9 +109,10 @@ async def button_callback(client: Client, query: CallbackQuery):
         )
 
 
-@bot.on_message(filters.text & ~filters.command(["start", "help"]))
-async def handle_message(client: Client, message: Message):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
     text = message.text or message.caption or ""
+
     url = extract_url_from_text(text)
 
     if not url:
@@ -142,7 +139,10 @@ async def handle_message(client: Client, message: Message):
         parse_mode=ParseMode.HTML,
     )
 
-    await client.send_chat_action(message.chat.id, ChatAction.UPLOAD_VIDEO)
+    await context.bot.send_chat_action(
+        chat_id=message.chat_id,
+        action=ChatAction.UPLOAD_VIDEO
+    )
 
     file_path = None
     try:
@@ -166,12 +166,17 @@ async def handle_message(client: Client, message: Message):
 
         await status_msg.edit_text(f"{platform_emoji} Video jo'natilmoqda...")
 
-        await message.reply_video(
-            video=file_path,
-            caption=caption,
-            parse_mode=ParseMode.HTML,
-            supports_streaming=True,
-        )
+        with open(file_path, 'rb') as video_file:
+            await context.bot.send_video(
+                chat_id=message.chat_id,
+                video=video_file,
+                caption=caption,
+                parse_mode=ParseMode.HTML,
+                supports_streaming=True,
+                reply_to_message_id=message.message_id,
+                write_timeout=300,
+                read_timeout=300,
+            )
 
         await status_msg.delete()
 
@@ -236,8 +241,6 @@ def run_self_ping():
 def main():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN topilmadi!")
-    if not API_ID or not API_HASH:
-        raise ValueError("API_ID va API_HASH topilmadi!")
 
     health_thread = threading.Thread(target=run_health_server, daemon=True)
     health_thread.start()
@@ -245,8 +248,18 @@ def main():
     ping_thread = threading.Thread(target=run_self_ping, daemon=True)
     ping_thread.start()
 
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CallbackQueryHandler(button_callback))
+    app.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        handle_message
+    ))
+
     logger.info(f"Save Bot ishga tushdi! @{BOT_USERNAME}")
-    bot.run()
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":

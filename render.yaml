@@ -7,6 +7,10 @@ services:
     envVars:
       - key: BOT_TOKEN
         sync: false
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
       - key: BOT_USERNAME
         value: idisopbot
       - key: PYTHON_VERSION

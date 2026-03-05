@@ -43,15 +43,12 @@ CAPTION_TEMPLATE = (
 )
 
 WELCOME_TEXT = (
-    "👋 <b>Salom! Men Save Bot — video yuklovchiman.</b>\n\n"
-    "📲 <b>Qanday ishlaydi?</b>\n"
-    "1️⃣ Instagram yoki TikTok video havolasini yuboring\n"
-    "2️⃣ Men videoni yuklab, sizga jo'nataman\n"
-    "3️⃣ Videoni do'stlaringizga yuborganingizda ular ham mening linkimni ko'rishadi\n\n"
+    "👋 <b>Salom! Men video yuklovchi botman.</b>\n\n"
+    "📲 Instagram yoki TikTok havolasini yuboring — videoni yuklab beraman.\n\n"
     "✅ <b>Qo'llab-quvvatlanadi:</b>\n"
     "• Instagram Reels, Posts, Stories\n"
-    "• TikTok Videoları\n\n"
-    "🔗 Havola yuboring va boshlaylik!"
+    "• TikTok Videos\n\n"
+    "🔗 Havola yuboring!"
 )
 
 HELP_TEXT = (

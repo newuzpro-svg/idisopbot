@@ -2,6 +2,8 @@ import os
 import logging
 import asyncio
 import threading
+import time
+import urllib.request
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -230,12 +232,28 @@ def run_health_server():
     server.serve_forever()
 
 
+def run_self_ping():
+    url = os.getenv("RENDER_EXTERNAL_URL")
+    if not url:
+        return
+    while True:
+        time.sleep(600)  # 10 daqiqada bir
+        try:
+            urllib.request.urlopen(url, timeout=10)
+            logger.info("Self-ping OK")
+        except Exception as e:
+            logger.warning(f"Self-ping xato: {e}")
+
+
 def main():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN .env faylida topilmadi!")
 
     health_thread = threading.Thread(target=run_health_server, daemon=True)
     health_thread.start()
+
+    ping_thread = threading.Thread(target=run_self_ping, daemon=True)
+    ping_thread.start()
 
     app = Application.builder().token(BOT_TOKEN).build()
 

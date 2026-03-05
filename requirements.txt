@@ -1,4 +1,4 @@
-pyrogram==2.0.106
+hydrogram
 tgcrypto
 yt-dlp>=2026.1.29
 python-dotenv==1.0.0

@@ -182,27 +182,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except ValueError as e:
         error_text = str(e).lower()
-        if "private" in error_text or "login required" in error_text or "age" in error_text:
-            msg = (
-                "❌ Video yopiq (private) yoki kirish uchun login talab qilinadi."
-            )
-        elif "not available" in error_text or "does not exist" in error_text or "404" in error_text:
-            msg = (
-                "❌ Video topilmadi yoki o'chirilgan.\n\n"
-                "Havola to'g'ri ekanligini tekshiring."
-            )
-        elif "instagram" in error_text or "rate" in error_text or "429" in error_text:
-            msg = (
-                "❌ Instagram hozir yuklab olishni blokladi.\n\n"
-                "Bir oz kutib qayta urinib ko'ring."
-            )
+        logger.error(f"Download xatosi: {e}")
+        if "this video is private" in error_text or "login required" in error_text or "age-restricted" in error_text:
+            msg = "❌ Video yopiq (private) yoki kirish uchun login talab qilinadi."
+        elif "not available" in error_text or "does not exist" in error_text or "404" in error_text or "removed" in error_text:
+            msg = "❌ Video topilmadi yoki o'chirilgan."
+        elif "rate" in error_text or "429" in error_text or "too many requests" in error_text:
+            msg = "❌ Juda ko'p so'rov yuborildi. Bir oz kutib qayta urinib ko'ring."
         elif "timeout" in error_text or "timed out" in error_text:
             msg = "❌ Vaqt tugadi. Iltimos qayta urinib ko'ring."
+        elif "unable to download" in error_text or "http error" in error_text:
+            msg = "❌ Videoni yuklab bo'lmadi. Qayta urinib ko'ring."
         else:
-            msg = (
-                "❌ Videoni yuklab bo'lmadi.\n\n"
-                "Havola to'g'ri va video ochiq (public) ekanligini tekshiring."
-            )
+            msg = "❌ Videoni yuklab bo'lmadi. Havola to'g'ri va video ochiq (public) ekanligini tekshiring."
         await status_msg.edit_text(msg, parse_mode=ParseMode.HTML)
 
     except FileNotFoundError:
